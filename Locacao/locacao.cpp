@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <time.h>
 
 typedef struct est_Clientes
 {
@@ -28,14 +29,100 @@ typedef struct est_Locacao
     char cpf[13];
     char placa[9];
     char cartao[18];
-    char data[10];
+    int dia;
+    int mes;
+    int ano;
 
 }Locacao;
+
+int getDia(){
+
+    time_t t = time(NULL);
+    struct tm* dataAtual = localtime(&t);
+    int dia = dataAtual->tm_mday;
+
+    return dia;
+}
+
+int getMes(){
+
+    time_t t = time(NULL);
+    struct tm* dataAtual = localtime(&t);
+    int mes = dataAtual->tm_mon + 1;
+
+    return mes;
+}
+
+int getAno(){
+
+    time_t t = time(NULL);
+    struct tm* dataAtual = localtime(&t);
+    int ano = dataAtual->tm_year + 1900;
+
+    return ano;
+}
 
 void toUpper(char c[]){
 
     for (int i = 0; c[i] != '\0'; i++)
         c[i] = toupper(c[i]); 
+}
+
+bool dataInvalida(Locacao locacao, char dataDevolucao[]){
+
+    //Pega o dia da data de devolucao
+    char dia[3];
+
+    for (int i = 0; i < 2; i++)
+    {
+        dia[i] = dataDevolucao[i];
+    }
+
+    dia[2] = '\0';
+
+    //Pega o mes da data de devolucao
+    char mes[3];
+
+    for (int i = 2, j = 0; i < 4; i++, j++)
+    {
+        mes[j] = dataDevolucao[i];
+    }
+
+    mes[2] = '\0';
+    
+    //Separa o dia mes e ano em inteiros separados 
+
+    int diaDevolucao = atoi(dia);
+    int mesDevolucao = atoi(mes);
+    int anoDevolucao = atoi(dataDevolucao + 4);
+
+    int diaAtual = getDia();
+    int mesAtual = getMes();
+    int anoAtual = getAno();
+
+    if (anoDevolucao < locacao.ano) 
+        return true; 
+    else 
+        if (anoDevolucao == locacao.ano) 
+            if (mesDevolucao < locacao.mes) 
+                return true; 
+        else 
+            if (mesDevolucao == locacao.mes) 
+                if (diaDevolucao < locacao.dia) 
+                return true; 
+
+    if (anoDevolucao > anoAtual) 
+        return true;
+    else
+        if (anoDevolucao == anoAtual) 
+            if (mesDevolucao > mesAtual) 
+                return true; 
+        else 
+            if (mesDevolucao == mesAtual) 
+                if (diaDevolucao > diaAtual) 
+                    return true; 
+
+    return false;
 }
 
 int buscaCPF(Cliente clientes[], char cpf[], int qtdClientes){
@@ -184,10 +271,59 @@ bool modeloValido(char modelo[]){
     return true;
 }
 
-//acabar
-bool anoValido(int ano){
+bool eAdulto(char dataNasc[]){
 
-    return true;
+    //Pega o dia da data de nascimento
+    char dia[3];
+
+    for (int i = 0; i < 2; i++)
+    {
+        dia[i] = dataNasc[i];
+    }
+
+    dia[2] = '\0';
+
+    //Pega o mes da data de nascimento
+    char mes[3];
+
+    for (int i = 2, j = 0; i < 4; i++, j++)
+    {
+        mes[j] = dataNasc[i];
+    }
+
+    mes[2] = '\0';
+    
+    //Separa o dia mes e ano em inteiros separados 
+
+    int diaNascimento = atoi(dia);
+    int mesNascimento = atoi(mes);
+    int anoNascimento = atoi(dataNasc + 4);
+
+    //Pega a data atual
+    int diaAtual = getDia();
+    int mesAtual = getMes();
+    int anoAtual = getAno();
+
+    int idade = anoAtual - anoNascimento;
+
+    //verifica se ja fez aniverario esse ano
+    if ( (mesAtual < mesNascimento) || (mesAtual == mesNascimento && diaAtual < diaNascimento) )
+        idade--;
+
+    if (idade < 18)
+        printf("Data invalida. Cliente deve ter ao menos 18 anos\n");
+    
+    return (idade >= 18);
+}
+
+bool carroNovo(int anoFabricacao){
+
+    int anoAtual = getAno();
+
+    if ( (anoFabricacao < 2000) || (anoFabricacao > anoAtual) )
+        printf("Ano deve estar no intervalo de 2000 a ano atual\n");
+    
+    return ( (anoFabricacao >= 2000) && (anoFabricacao <= anoAtual) );
 }
 
 //Funcoes para incluir cliente
@@ -251,12 +387,12 @@ bool dataNascimentoValida(char dataNasc[]){
     return 1;
 }
 
-int clienteCadastrado(Cliente clientes[], int *qtdClientes){
+bool clienteCadastrado(Cliente clientes[], int *qtdClientes){
 
     if (*qtdClientes == 30)
     {
         printf("Numero Maximo de clientes cadastrados\n");
-        return 0;
+        return false;
     }
         
     Cliente c;
@@ -275,19 +411,24 @@ int clienteCadastrado(Cliente clientes[], int *qtdClientes){
     } while (!verificaCPF(c.cpf));
     c.cpf[strcspn(c.cpf, "\n")] = 0;
 
-    fflush(stdin);
-    printf("Data de Nascimento: ");
-    fgets(c.dataNasc, 10, stdin);
+    do
+    {
+        fflush(stdin);
+        printf("Data de Nascimento: ");
+        fgets(c.dataNasc, 10, stdin);
+        
+    } while (!eAdulto(c.dataNasc));
+    
     c.dataNasc[strcspn(c.dataNasc, "\n")] = 0;
 
     if (!cpfExistente(clientes, *qtdClientes, c.cpf) /*&& dataNascimentoValida(c.dataNasc)*/)
     {
         clientes[*qtdClientes] = c;
         *qtdClientes += 1; 
-        return 1;
+        return true;
     }
     
-    return 0;
+    return false;
 }
 
 void incluirClientes(Cliente clientes[], int *qtdClientes){
@@ -400,7 +541,7 @@ void listarClientes(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], 
                 printf("            TTipo: %c\n", veiculos[indiceVeiculo].tipo);
                 printf("            Modelo: %s\n", veiculos[indiceVeiculo].modelo);
                 printf("            Km: %d\n", veiculos[indiceVeiculo].Km);
-                printf("            Data da Locacao: %s\n", locacoes[indiceLocacao].data);
+                //printf("            Data da Locacao: %s\n", locacoes[indiceLocacao].data);
             }
         }
     }
@@ -466,14 +607,28 @@ bool veiculoCadastrado(Veiculo veiculos[], int *qtdVeiculos){
         fflush(stdin);
         printf("Ano: ");
         scanf("%d", &v.anoFabricacao);
-    } while (!anoValido(v.anoFabricacao));
+    } while (!carroNovo(v.anoFabricacao));
 
-    printf("Valor da locacao/dia: ");
-    scanf("%f", &v.valorLocacao);
+    do
+    {
+        printf("Valor da locacao/dia: ");
+        scanf("%f", &v.valorLocacao);
 
-    printf("Quilometragem: ");
-    scanf("%d", &v.Km);
-
+        if (v.valorLocacao < 0)
+            printf("Valor deve ser maior que 0");
+        
+    } while (v.valorLocacao < 0);
+    
+    do
+    {
+        printf("Quilometragem: ");
+        scanf("%d", &v.Km);
+        
+        if (v.Km < 0)
+            printf("Valor deve ser maior que 0");
+        
+    } while (v.Km < 0);
+    
     if (placaCadastrada(veiculos, v.placa, *qtdVeiculos))
     {
         printf("Erro: veiculo ja cadastrado\n");
@@ -567,7 +722,7 @@ void listarVeiculos(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], 
             printf("               CPF: %s\n", clientes[indiceCliente].cpf);
             printf("               Nome: %s\n", clientes[indiceCliente].nome);
             printf("               Dt nascimento: %s\n", clientes[indiceCliente].dataNasc);
-            printf("               Data da Locacao%s\n", locacoes[indiceLocacao].data);
+           //printf("               Data da Locacao%s\n", locacoes[indiceLocacao].data);
         }
     }
     printf("\n");
@@ -638,7 +793,9 @@ bool incluirLocacao(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], 
 
     l.cartao[strcspn(l.cartao, "\n")] = 0;
 
-    //l.data = data atual do pc
+    l.dia = getDia();
+    l.mes = getMes();
+    l.ano = getAno();
 
     if (verificaErrosLocacao(clientes, locacoes, l, veiculos, *qtdClientes, *qtdLocacoes, *qtdVeiculos))
     {
@@ -688,22 +845,23 @@ void lerDados(char cpf[], char dataDevolucao[], int *km){
 bool verificaErrosDevolucao(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], int qtdClientes, int qtdLocacoes, int qtdVeiculos, int km, char cpf[], char dataDevolucao[]){
 
     int indiceCliente = buscaCPF(clientes, cpf, qtdClientes);
+    int indiceLocacao = buscaLocacaoPorCliente(clientes[indiceCliente], locacoes, qtdLocacoes);
 
     if (indiceCliente < 0)
     {
         printf("ERRO: Cliente nao encontrado\n");
         return false;
     }
-    else if (buscaLocacaoPorCliente(clientes[indiceCliente], locacoes, qtdLocacoes) < 0)
+    else if (indiceLocacao < 0)
     {
         printf("ERRO: Cliente nao possui locacao\n");
         return false;
     }
-    /*else if (data invalida)
+    else if (dataInvalida(locacoes[indiceLocacao], dataDevolucao))
     {
         printf("ERRO: Data da devolucao deve ser menor ou igual a hoje e maior ou igual a data da locacao\n");
         return false;
-    }*/
+    }
     else 
     {
         int indiceLocacao = buscaLocacaoPorCliente(clientes[indiceCliente], locacoes, qtdLocacoes);
@@ -728,12 +886,46 @@ void removeLocacao(Cliente cliente, Locacao locacoes[], int *qtdLocacoes, int in
    
 }
 
-float calculaPreco(Locacao locacoes[], Veiculo veiculos[], int qtdVeiculos, int indiceLocacao, int km){
+int calculaDias(Locacao locacao, char dataDevolucao[]){
+
+    //Pega o dia da data de devolucao
+    char dia[3];
+
+    for (int i = 0; i < 2; i++)
+    {
+        dia[i] = dataDevolucao[i];
+    }
+
+    dia[2] = '\0';
+
+    //Pega o mes da data de devolucao
+    char mes[3];
+
+    for (int i = 2, j = 0; i < 4; i++, j++)
+    {
+        mes[j] = dataDevolucao[i];
+    }
+
+    mes[2] = '\0';
+    
+    //Separa o dia mes e ano em inteiros separados 
+
+    int diaDevolucao = atoi(dia);
+    int mesDevolucao = atoi(mes);
+    int anoDevolucao = atoi(dataDevolucao + 4);
+
+    int diasLocacao = (locacao.dia + (locacao.mes * 30) + (locacao.ano * 365));
+    int diasDevolucao = (diaDevolucao + (mesDevolucao * 30) + (anoDevolucao * 365));
+    
+    return diasDevolucao - diasLocacao;
+}
+
+float calculaPreco(Locacao locacoes[], Veiculo veiculos[], int qtdVeiculos, int indiceLocacao, int km, char dataDevolucao[]){
 
     float preco;
     int indiceVeiculo = buscaVeiculoPorPlaca(veiculos, qtdVeiculos, locacoes[indiceLocacao].placa);
 
-    preco = (/*(dataLocacao - dataDevolucao) * */ veiculos[indiceVeiculo].valorLocacao)
+    preco = ( ( calculaDias(locacoes[indiceLocacao], dataDevolucao) ) * (veiculos[indiceVeiculo].valorLocacao) )
             + (km - veiculos[indiceVeiculo].Km); 
 
     veiculos[indiceVeiculo].Km = km;
@@ -741,7 +933,7 @@ float calculaPreco(Locacao locacoes[], Veiculo veiculos[], int qtdVeiculos, int 
     return preco;
 }
 
-bool veiculoDevolvido(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], int *qtdClientes, int *qtdLocacoes, int *qtdVeiculos){
+void veiculoDevolvido(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], int *qtdClientes, int *qtdLocacoes, int *qtdVeiculos){
 
     char cpf[13];
     char dataDevolucao[10];
@@ -753,15 +945,12 @@ bool veiculoDevolvido(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[]
     {
         int i = buscaCPF(clientes, cpf, *qtdClientes);
         int j = buscaLocacaoPorCliente(clientes[i], locacoes, *qtdLocacoes);
-        float preco = calculaPreco(locacoes, veiculos, *qtdVeiculos, j, km);
+        float preco = calculaPreco(locacoes, veiculos, *qtdVeiculos, j, km, dataDevolucao);
 
         removeLocacao(clientes[i], locacoes, qtdLocacoes, i);
         
-        printf("Devolucao realizada com sucesso. Valor a pagar R$%.2f", preco);
-        return true;
+        printf("Devolucao realizada com sucesso. Valor a pagar R$%.2f", preco); 
     }
-    else 
-        return false;
 }
 
 void devolverVeiculo(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], int *qtdClientes, int *qtdLocacoes, int *qtdVeiculos){
@@ -770,11 +959,7 @@ void devolverVeiculo(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[],
     printf("Devolucao de Veiculo\n");
     printf("--------------------\n");
 
-    if (veiculoDevolvido(clientes, locacoes, veiculos, qtdClientes, qtdLocacoes, qtdVeiculos))
-    {
-        //calculaPreco
-    }
-        
+    veiculoDevolvido(clientes, locacoes, veiculos, qtdClientes, qtdLocacoes, qtdVeiculos);
 
 }
 
@@ -808,7 +993,7 @@ void listarLocacao(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], i
             printf("            Tipo: %c\n", veiculos[indiceLocacao].tipo);
             printf("            Modelo: %s\n", veiculos[indiceLocacao].modelo);
             printf("            Quilometragem: %d\n", veiculos[indiceLocacao].Km);
-            //printf("Placa: %s", locacoes[indiceLocacao].data);
+            printf("            DataLocacao: %d/%d/%d", locacoes[indiceLocacao].dia, locacoes[indiceLocacao].mes, locacoes[indiceLocacao].ano);
         }
     }
     
@@ -1095,6 +1280,7 @@ int main(){
     Veiculo veiculos[50];
     Locacao locacoes[50];
 
+    //TODO: Validar Cartao de Credito
     int qtdClientes = 0, qtdVeiculos = 0, qtdLocacoes = 0;
 
     imprimeMenu(clientes, veiculos, locacoes, &qtdClientes, &qtdVeiculos, &qtdLocacoes);
