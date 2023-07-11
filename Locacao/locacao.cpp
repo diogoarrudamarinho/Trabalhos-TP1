@@ -311,7 +311,7 @@ int clienteEmLocacao(Cliente cliente, Locacao locacoes[], int qtdLocacoes){
 
 void removeCliente(Cliente clientes[], int *qtdClientes, int i){
 
-    *qtdClientes--;
+    *qtdClientes -= 1;
 
     for (int j = i; j < *qtdClientes; j++) 
         clientes[j] = clientes[j + 1];
@@ -380,7 +380,7 @@ void listarClientes(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], 
 
     for (int i = 0; i < qtdClientes; i++)
     {
-        int tamanho = 47 - strlen(veiculos[i].modelo);
+        int tamanho = 50 - strlen(veiculos[i].modelo);
         char espacos[tamanho + 1];
 
         for (int j = 0; j < tamanho + 1; j++)
@@ -389,7 +389,7 @@ void listarClientes(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], 
         }
 
         espacos[tamanho] = '\0';
-        printf("%s %s%s%s", clientes[i].cpf, clientes[i].nome, espacos, clientes[i].dataNasc);
+        printf("%s %s %s %s\n", clientes[i].cpf, clientes[i].nome, espacos, clientes[i].dataNasc);
         int indiceLocacao = buscaLocacaoPorCliente(clientes[i], locacoes, qtdLocacoes);
         if (indiceLocacao > -1)
         {
@@ -400,7 +400,7 @@ void listarClientes(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], 
                 printf("            TTipo: %c\n", veiculos[indiceVeiculo].tipo);
                 printf("            Modelo: %s\n", veiculos[indiceVeiculo].modelo);
                 printf("            Km: %d\n", veiculos[indiceVeiculo].Km);
-                printf("            Data da Locacao: %s", locacoes[indiceLocacao].data);
+                printf("            Data da Locacao: %s\n", locacoes[indiceLocacao].data);
             }
         }
     }
@@ -509,7 +509,9 @@ void excluiVeiculo(Locacao locacoes[], Veiculo veiculos[], int *qtdLocacoes, int
 
     int i = buscaVeiculoPorPlaca(veiculos, *qtdVeiculos, placa);
 
-    if (veiculoLocado(veiculos[i], locacoes, *qtdLocacoes))
+    if(i == -1)
+        printf("Placa nao cadastrada");
+    else if (veiculoLocado(veiculos[i], locacoes, *qtdLocacoes))
         printf("Veiculo em Locacao");
     else
         removeVeiculo(veiculos, qtdVeiculos, i);
@@ -792,7 +794,7 @@ void listarLocacao(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], i
 
         if (indiceLocacao > -1)
         {
-            int tamanho = 47 - strlen(clientes[i].nome);
+            int tamanho = 48 - strlen(clientes[i].nome);
             char espacos[tamanho + 1];
 
             for (int j = 0; j < tamanho + 1; j++)
@@ -802,11 +804,11 @@ void listarLocacao(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], i
 
             int indiceVeiculo = buscaVeiculoPorPlaca(veiculos, qtdVeiculos, locacoes[indiceLocacao].placa);
 
-            printf("Placa: %s", veiculos[indiceLocacao].placa);
-            printf("Placa: %c", veiculos[indiceLocacao].tipo);
-            printf("Placa: %s", veiculos[indiceLocacao].modelo);
-            printf("Placa: %s", veiculos[indiceLocacao].Km);
-            printf("Placa: %s", locacoes[indiceLocacao].data);
+            printf("            Placa: %s\n", veiculos[indiceLocacao].placa);
+            printf("            Tipo: %c\n", veiculos[indiceLocacao].tipo);
+            printf("            Modelo: %s\n", veiculos[indiceLocacao].modelo);
+            printf("            Quilometragem: %d\n", veiculos[indiceLocacao].Km);
+            //printf("Placa: %s", locacoes[indiceLocacao].data);
         }
     }
     
@@ -816,186 +818,231 @@ void listarLocacao(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], i
 //Menus
 void menuLocacao(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], int *qtdClientes, int *qtdLocacoes, int *qtdVeiculos){
 
-    printf("\n================\n");
-    printf("Menu de Locacao\n");
-    printf("================\n");
-    printf("  1 - Locar\n");
-    printf("  2 - Devolver\n");
-    printf("  3 - Consultar\n");
-    printf("  4 - Voltar\n");
-
     int opc;
 
     do
     {
-        printf("Opcao: ");
-        scanf("%d", &opc);
 
-        switch (opc)
+        printf("\n================\n");
+        printf("Menu de Locacao\n");
+        printf("================\n");
+        printf("  1 - Locar\n");
+        printf("  2 - Devolver\n");
+        printf("  3 - Consultar\n");
+        printf("  4 - Voltar\n");
+
+        bool flag;
+
+        do
         {
-        case 1:
-            locarVeiculo(clientes, locacoes, veiculos, qtdClientes, qtdLocacoes, qtdVeiculos);
-            break;
+            flag = false;
 
-        case 2:
-            if (*qtdLocacoes == 0)
-                printf("Sem veiculos Locados");
-            else
-                devolverVeiculo(clientes, locacoes, veiculos, qtdClientes, qtdLocacoes, qtdVeiculos);
+            printf("Opcao: ");
+            scanf("%d", &opc);
 
-            break;        
+            switch (opc)
+            {
+                case 1:
+                    if (*qtdVeiculos == 0 && *qtdClientes == 0)
+                        printf("Sem veiculos e clientes cadastrados!");
+                    else if (*qtdClientes == 0)
+                        printf("Sem clientes cadastrados!");
+                    else if (*qtdVeiculos == 0)
+                        printf("Sem veiculos cadastrados!");
+                    else         
+                        locarVeiculo(clientes, locacoes, veiculos, qtdClientes, qtdLocacoes, qtdVeiculos);
+                    break;
 
-        case 3:
-            if (*qtdLocacoes == 0)
-                printf("Sem Veiculos locados!\n");
-            else            
-                listarLocacao(clientes, locacoes, veiculos, *qtdClientes, *qtdLocacoes, *qtdVeiculos);
-            break;
+                case 2:
+                    if (*qtdLocacoes == 0)
+                        printf("Sem veiculos Locados");
+                    else
+                        devolverVeiculo(clientes, locacoes, veiculos, qtdClientes, qtdLocacoes, qtdVeiculos);
+                    break;        
 
-        case 4:
-            break;
+                case 3:
+                    if (*qtdLocacoes == 0)
+                        printf("Sem Veiculos locados!\n");
+                    else            
+                        listarLocacao(clientes, locacoes, veiculos, *qtdClientes, *qtdLocacoes, *qtdVeiculos);
+                    break;
 
-        default:
-            printf("Opcao Invalida\n");
-            break;
-        }
+                case 4:
+                    break;
+
+                default:
+                    flag = true;
+                    printf("Opcao Invalida\n");
+                    break;
+            
+            }
+        } while (flag);   
         
     } while (opc != 4);
-
 }
 
 void menuVeiculos(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], int *qtdClientes, int *qtdLocacoes, int *qtdVeiculos){
-
-    printf("\n================\n");
-    printf("Menu de Veiculos\n");
-    printf("================\n");
-    printf("  1 - Incluir\n");
-    printf("  2 - Excluir\n");
-    printf("  3 - Consultar\n");
-    printf("  4 - Voltar\n");
-
+    
     int opc;
 
-    do
+     do
     {
-        printf("Opcao: ");
-        scanf("%d", &opc);
+        printf("\n================\n");
+        printf("Menu de Veiculos\n");
+        printf("================\n");
+        printf("  1 - Incluir\n");
+        printf("  2 - Excluir\n");
+        printf("  3 - Consultar\n");
+        printf("  4 - Voltar\n");
 
-        switch (opc)
+        bool flag;
+
+        do
         {
-        case 1:
-            incluirVeiculos(veiculos, qtdVeiculos);
-            break;
+            flag = false;
+            printf("Opcao: ");
+            scanf("%d", &opc);
 
-        case 2:
-
-            if (*qtdVeiculos == 0)
+            switch (opc)
             {
-                printf("Sem veiculos cadastrados!");
-            }
-            else
-            {
-                char placa[9];
-                bool loop;
+                case 1:
+                    incluirVeiculos(veiculos, qtdVeiculos);
+                    break;
 
-                do
-                {
-                    loop = false;
-                    fflush(stdin);
-                    printf("Placa: ");
-                    fgets(placa, 9, stdin);
+                case 2:
 
-                    if (!placaCadastrada(veiculos, placa, *qtdVeiculos))
+                    if (*qtdVeiculos == 0)
+                        printf("Sem veiculos cadastrados!");
+                    else
                     {
-                        printf("Placa Invalida!\n");
-                        loop = true;
+                        char placa[9];
+                        bool loop;
+
+                        do
+                        {
+                            loop = false;
+                            fflush(stdin);
+                            printf("Placa: ");
+                            fgets(placa, 9, stdin);
+
+                            if (!placaValida(placa))
+                                loop = true;
+                            
+                        } while (loop);
+                        
+                        toUpper(placa);
+                        placa[strcspn(placa, "\n")] = 0;
+                        excluiVeiculo(locacoes, veiculos, qtdLocacoes, qtdVeiculos, placa);
                     }
-                } while (loop);
-                
-                excluiVeiculo(locacoes, veiculos, qtdLocacoes, qtdVeiculos, placa);
+                    
+                    break;
+
+                case 3:
+                    if (*qtdVeiculos == 0)
+                        printf("Sem Veiculos cadastrados");
+                    else            
+                        listarVeiculos(clientes, locacoes, veiculos, *qtdClientes, *qtdLocacoes, *qtdVeiculos);
+                    break;
+
+                case 4:
+                    break;
+
+                default:
+                    flag = true;
+                    printf("Opcao Invalida\n");
+                    break;
             }
-            
-            break;
 
-        case 3:
-            if (*qtdVeiculos == 0)
-                printf("Sem Veiculos cadastrados\n");
-            else            
-                listarVeiculos(clientes, locacoes, veiculos, *qtdClientes, *qtdLocacoes, *qtdVeiculos);
-            break;
-
-        case 4:
-            break;
-
-        default:
-            printf("Opcao Invalida\n");
-            break;
-        }
+        } while (flag);
+    
     } while (opc != 4);
-
 }
 
 void menuClientes(Cliente clientes[], Locacao locacoes[], Veiculo veiculos[], int *qtdClientes, int *qtdLocacoes, int *qtdVeiculos){
 
-    printf("\n================\n");
-    printf("Menu de Clientes\n");
-    printf("================\n");
-    printf("  1 - Incluir\n");
-    printf("  2 - Excluir\n");
-    printf("  3 - Consultar por CPF\n");
-    printf("  4 - Consultar por Nome\n");
-    printf("  5 - Voltar\n");
-
-    int opc;
-
+   int opc;  
+    
     do
     {
-        printf("Opcao: ");
-        scanf("%d", &opc);
+    
+        printf("\n================\n");
+        printf("Menu de Clientes\n");
+        printf("================\n");
+        printf("  1 - Incluir\n");
+        printf("  2 - Excluir\n");
+        printf("  3 - Consultar por CPF\n");
+        printf("  4 - Consultar por Nome\n");
+        printf("  5 - Voltar\n");
 
-        switch (opc)
+        bool flag;
+
+        do
         {
-        case 1:
-            incluirClientes(clientes, qtdClientes);
-            break;
+            flag = false;
+            printf("Opcao: ");
+            scanf("%d", &opc);
 
-        case 2:
-            char cpf[13];
-            printf("Digite o CPF do cliente: ");
-            fflush(stdin);
-            fgets(cpf, 13, stdin);
-            excluirCliente(clientes, locacoes, cpf, qtdClientes, qtdLocacoes);
-            break;
+            switch (opc)
+            {
+                case 1:
+                    incluirClientes(clientes, qtdClientes);
+                    break;
 
-        case 3:
-            if (*qtdClientes == 0)
-                printf("Sem Clientes cadastrados\n");
-            else            
-                consultaCPF(clientes, locacoes, veiculos, *qtdClientes, *qtdLocacoes, *qtdVeiculos);
-            break;
+                case 2:
+                    if (*qtdClientes == 0)
+                        printf("Sem clientes cadastrados!");
+                    else
+                    {
+                        char cpf[13];
+                        bool loop;
 
-        case 4:
-            if (*qtdClientes == 0)
-                printf("Sem Clientes cadastrados\n");
-            else            
-                consultaNome(clientes, locacoes, veiculos, *qtdClientes, *qtdLocacoes, *qtdVeiculos);
-            break;
+                        do
+                        {
+                            printf("Digite o CPF do cliente: ");
+                            fflush(stdin);
+                            fgets(cpf, 13, stdin);
+                            loop = verificaCPF(cpf);
+                            
+                        } while (!loop);
 
-        case 5:
-            break;
+                        cpf[strcspn(cpf, "\n")] = 0;
+                        excluirCliente(clientes, locacoes, cpf, qtdClientes, qtdLocacoes);
+                    }
+                    
+                    break;
 
-        default:
-            printf("Opcao Invalida\n");
-            break;
-        }
+                case 3:
+                    if (*qtdClientes == 0)
+                        printf("Sem Clientes cadastrados");
+                    else            
+                        consultaCPF(clientes, locacoes, veiculos, *qtdClientes, *qtdLocacoes, *qtdVeiculos);
+                    break;
+
+                case 4:
+                    if (*qtdClientes == 0)
+                        printf("Sem Clientes cadastrados");
+                    else            
+                        consultaNome(clientes, locacoes, veiculos, *qtdClientes, *qtdLocacoes, *qtdVeiculos);
+                    break;
+
+                case 5:
+                    break;
+
+                default:
+                    printf("Opcao Invalida\n");
+                    flag = true;
+                    break;
+            }
+
+        } while (flag);
+           
     } while (opc != 5);
-
 }
 
 void imprimeMenu(Cliente clientes[], Veiculo veiculos[], Locacao locacoes[], int *qtdClientes, int *qtdVeiculos, int *qtdLocacoes){
     
     int opc;
-    int flag;
+    bool flag;
 
     do
     {   
@@ -1009,7 +1056,7 @@ void imprimeMenu(Cliente clientes[], Veiculo veiculos[], Locacao locacoes[], int
 
         do
         {
-            flag = 0;
+            flag = false;
 
             printf("Opcao: ");
             scanf("%d", &opc);
@@ -1025,7 +1072,7 @@ void imprimeMenu(Cliente clientes[], Veiculo veiculos[], Locacao locacoes[], int
                     break;
 
                 case 3:
-                    //menuLocacao(clientes, locacoes, veiculos, qtdClientes, qtdLocacoes, qtdVeiculos);
+                    menuLocacao(clientes, locacoes, veiculos, qtdClientes, qtdLocacoes, qtdVeiculos);
                     break;
 
                 case 4:
@@ -1034,7 +1081,7 @@ void imprimeMenu(Cliente clientes[], Veiculo veiculos[], Locacao locacoes[], int
 
                 default:
                     printf("Opcao Invalida\n");
-                    flag = 1;
+                    flag = true;
                     break;
             }
         } while (flag);   
@@ -1044,7 +1091,6 @@ void imprimeMenu(Cliente clientes[], Veiculo veiculos[], Locacao locacoes[], int
 
 int main(){
 
-    //TODO: flag nos menus, funcoes de data, converter para imprimir locacao
     Cliente clientes[50];
     Veiculo veiculos[50];
     Locacao locacoes[50];
