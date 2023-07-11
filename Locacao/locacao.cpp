@@ -381,12 +381,6 @@ bool cpfExistente(Cliente clientes[], int qtdClientes, char cpf[]){
    return false;
 }
 
-//acabar
-bool dataNascimentoValida(char dataNasc[]){
-
-    return 1;
-}
-
 bool clienteCadastrado(Cliente clientes[], int *qtdClientes){
 
     if (*qtdClientes == 30)
